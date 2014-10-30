@@ -1,4 +1,4 @@
-e strict;
+use strict;
 use warnings;
 use Getopt::Std;
 sub croak {die "$0: @_: $!\n"}
