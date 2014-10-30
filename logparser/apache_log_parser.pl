@@ -1,35 +1,54 @@
-#!/usr/bin/env perl
-use strict;
+e strict;
 use warnings;
+use Getopt::Std;
+sub croak {die "$0: @_: $!\n"}
+my %ha = ();
+my %ha2 = ();
+my %opts = ();
+getopts("ab", \%opts);
 
-#!usr/bin/perl 
+sub read_file {
 
-use warnings;
-use strict;
-
-my $log = "/magazyn/access.log";
-my %seen = ();
-
-open (my $fh, "<", $log) or die "unable to open $log: $!"; 
-
-while( my $line = <$fh> ) {
-    chomp $line;
-
-    if( $line =~ /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/ ){
-        my $ln = $1;
-        if (! $seen{$ln}) {
-           $seen{$ln}++;
+    my $file = shift;
+    open(FILE, $file) or croak;
+    while (my $line = <FILE>) {
+        if ($line =~ m/$main::pattern/) {
+            if ( !$ha{$1}) {
+                $ha{$1}++;
+            }
         }
-               
+    }
+    close FILE;
+}    
+ 
+sub openx {
+    while (my $files = shift) {
+
+        read_file $files;
     }
 }
-close $fh;
 
-for my $key ( keys %seen ) {
-    print "$key: $seen{$key}\n";
+sub help {
+    print "\nUzycie: perl $0 param plik(i)\n";
+    print "   -a podsumowanie IP\n   -b podsumowanie przeglarek\n\n";
 }
-my $ha_ref = \%seen;
 
-for my $keys (keys %{$ha_ref}){
-    print $ha_ref -> {$keys}, "\n";
+if (defined $opts{b}) {
+    our $pattern = '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*((MSIE|Mozilla).*?);';
+    openx @ARGV
 }
+
+elsif (defined $opts{a}) {
+    our $pattern = '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})';
+    openx @ARGV
+}
+
+else {
+    help
+}
+
+foreach my $key (sort {$ha{$a} <=> $ha{$b}} keys %ha) {
+	print "$key: $ha{$key}\n";
+}  
+  
+  
