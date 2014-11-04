@@ -2,7 +2,9 @@
 use strict;
 use warnings;
 use Getopt::Std;
+use List::Util 'sum';
 sub croak {die "$0: @_: $!\n"}
+
 my %ha;
 my %opts;
 my $pattern;
@@ -15,7 +17,7 @@ sub ip_num {
 	open(FILE, $files) or croak;
 	while (my $line = <FILE>) {
 	    if ($line =~ m/$pattern/) {
-		$ha{$1}++ if (!$ha{$1}); 
+		$ha{$1}++ if (!$ha{$1});
 	    }
 	}
 	close FILE;
@@ -39,6 +41,21 @@ sub ip_max {
     }
 }  
 
+
+sub time_of_day {
+    open (my $file, '<', $ARGV[0]) or die $!;
+    while (my $line = <$file>) { 
+	if ($line =~ m/[^\d](\d\d:)/) {
+	    $ha{$1}++;
+	} 
+    }
+    close $file;
+    for my $key (sort keys %ha) {
+	print "$key ", $ha{$key}," req -> ", int($ha{$key} * 100 / sum values %ha), "%\n";  
+    }    
+}
+
+
 sub browser {
     print STDERR $info, "\n";
     while (my $files = shift) {
@@ -61,8 +78,11 @@ sub help {
     print "   -a podsumowanie IP\n   -b podsumowanie przeglarek\n\n";
 }
 
-if (defined $opts{b}) { $pattern = '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*((MSIE|Mozilla).*?);'; ip_num @ARGV }
-elsif (defined $opts{a}) { $pattern = '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'; ip_num @ARGV }
+
+
+
+if (defined $opts{a}) { $pattern = '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'; ip_num @ARGV }
+elsif (defined $opts{b}) { $pattern = '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'; time_of_day }
 elsif (defined $opts{c}) { $pattern = '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'; ip_max @ARGV }
 else { help }
 

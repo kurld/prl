@@ -7,7 +7,7 @@ use List::Util 'sum';
 my %ha;
 
 
-open( my $file, '<', 'auth.log') or die;
+open( my $file, '<', $ARGV[-1]) or die $!;
     
 while (my $line = <$file>) { 
     if ($line =~ m/(\d\d:)/) {
@@ -17,14 +17,8 @@ while (my $line = <$file>) {
 
 close $file;
 
-my $sum = sum values %ha;
-
-for my $key (keys %ha) {
-    $ha{$key} = $ha{$key} * 100 / $sum;   
-}
-
 for my $key (sort keys %ha) {
-    print "$key ", int($ha{$key}), "%\n";  
+    print "$key ", $ha{$key}," req -> ", int($ha{$key} * 100 / sum values %ha), "%\n";  
 }
 
 
