@@ -5,7 +5,7 @@ use Data::Dumper;
 use Digest::MD5 qw(md5_base64);
 use Digest::SHA qw(sha512_base64 sha1_base64);
 use Crypt::PasswdMD5;
-#my $rands;
+my $rands;
 
 sub main {   
     while (1) {
@@ -29,8 +29,8 @@ sub salt {
     open (my $rand, '<', '/dev/random') or die $!;
     read ($rand, my $seed, 4);
     close $rand;
-    my $rands = unpack("H*", $seed);
-    return $rands;
+    $rands = unpack("H*", $seed);  
 }
 
-main (\&rand);
+salt;
+main $rands;
