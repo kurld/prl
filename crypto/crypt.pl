@@ -1,17 +1,18 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Data::Dumper;
 use Digest::MD5 qw(md5_base64);
 use Digest::SHA qw(sha512_base64 sha1_base64);
 use Crypt::PasswdMD5;
-my $rands;
+use Term::ReadKey;
 
 sub main {   
     while (1) {
-        my $rands = shift;
-        my $input = <STDIN>;
-        chomp $input;
+	print "Hasło: \n";
+        my $rands = &salt;
+	ReadMode("noecho");
+	chomp (my $input = <STDIN>);
+	ReadMode ("original");
             if ($input =~ m/\A[\s]?$/) {
                 print "Cos poszło nie tak. Pusta linia?\n";
                 next;
@@ -26,11 +27,10 @@ sub main {
 }
 
 sub salt {
-    open (my $rand, '<', '/dev/random') or die $!;
-    read ($rand, my $seed, 4);
+    open (my $rand, '<', '/dev/urandom') or die $!;
+    read ($rand, my $seed, 8);
     close $rand;
-    $rands = unpack("H*", $seed);  
+    my $rands = unpack("H*", $seed);  
 }
 
-salt;
-main $rands;
+main;
