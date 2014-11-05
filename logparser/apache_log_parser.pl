@@ -12,7 +12,7 @@ my $info = "To moze chwile potrwac...";
 getopts("abc", \%opts);
 
 sub ip_num {
-    print STDERR $info, "\n";
+    #print STDERR $info, "\n";
     while (my $files = shift) {
 	open(FILE, $files) or croak;
 	while (my $line = <FILE>) {
@@ -26,7 +26,7 @@ sub ip_num {
 }  
   
 sub ip_max {
-    print STDERR $info, "\n";
+    #print STDERR $info, "\n";
     while (my $files = shift) {
 	open(FILE, $files) or croak;
 	while (my $line = <FILE>) {
@@ -36,10 +36,18 @@ sub ip_max {
 	}
 	close FILE;
     }
-    foreach my $key (sort {$ha{$a} <=> $ha{$b}} keys %ha) {
-	print "$key: $ha{$key}\n";
-    }
-}  
+    my @val = sort( {$ha{$a} <=> $ha{$b}} keys %ha);
+    for my $i (-20..-1) {
+	my $hostname = qx/nslookup $val[$i]/;
+	$hostname =~ s/[\s\n]+/ /g;
+	if ($hostname =~ m/name\ =\ (\S+)/ ){
+	    print $val[$i], "\t", $ha{$val[$i]},"\t", "$1", "\n";
+	}
+	else {
+	    print $val[$i], "\t", $ha{$val[$i]}, "\n";
+	}
+    }  
+}
 
 
 sub time_of_day {
@@ -51,26 +59,11 @@ sub time_of_day {
     }
     close $file;
     for my $key (sort keys %ha) {
-	print "$key ", $ha{$key}," req -> ", int($ha{$key} * 100 / sum values %ha), "%\n";  
+	print "$key ", $ha{$key},"req\t->\t", int($ha{$key} * 100 / sum values %ha), "%\n";  
     }    
 }
 
 
-sub browser {
-    print STDERR $info, "\n";
-    while (my $files = shift) {
-	open(FILE, $files) or croak;
-	while (my $line = <FILE>) {
-	    if ($line =~ m/$pattern/) {
-		$ha{$1}++ ; 
-	    }
-	}
-	close FILE;
-    }
-    foreach my $key (sort {$ha{$a} <=> $ha{$b}} keys %ha) {
-	print "$key: $ha{$key}\n";
-    }
-}  
 
 
 sub help {
