@@ -31,16 +31,16 @@ sub link_freq {
     while (my $files = shift) {
 	open(FILE, $files) or croak;
 	while (my $line = <FILE>) { 
-	    if ($line =~ m/(?:"\S+)\ (\S+)[" ]/) {
+	    if ($line =~ m#(?:")(?:[A-Z]+)\s+(\S+)\s+#) {
 		my $fs = $1;
 		$fs =~ s/"//g;
-		$ha{$fs}++;
+		$ha{$fs}++ ;
 	    }
 	}
 	close FILE;
     }
     for my $key (sort {$ha{$a} <=> $ha{$b}} keys %ha) {
-	print "$ha{$key}\t$key\n";
+	print "$ha{$key}\t$key\n" ;
     }
 }  
 
