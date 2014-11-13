@@ -2,12 +2,13 @@
 use strict;
 use warnings;
 
-
-
 sub process {
-    my @arr = split (/ \| /, shift);
-    my $iter = pop @arr;
-    @arr = split / /, $arr[0];
+    my @arr;
+    my @zarr = split (/ \| /, shift);
+    my $iter = int(pop @zarr);
+    @zarr = split / /, $zarr[0];
+    for my $n (@zarr) {
+	push @arr, int($n) }
     for my $m (1..$iter) {
         for my $i (0..($#arr - 1)){
             if ($arr[$i] > $arr[$i+1]) {
@@ -21,7 +22,7 @@ sub process {
 sub readlines {
     open (my $fh, '<', $ARGV[0]);
     while (my $line = <$fh>) {
-        if ($line =~ m/^\n$/) {
+        if ($line =~ m/^\n$/ or $line =~ m/-/) {
             next;
         }
         chomp $line;
