@@ -1,0 +1,74 @@
+image: docker:19
+
+services:
+  - name: docker:18.09-dind
+    alias: dind
+
+stages:
+  - build
+  - deploy
+
+variables:
+  CONTAINER_IMAGE: strumpfli/test:${CI_COMMIT_SHORT_SHA}
+  HTTP_PROXY: http://dest-prxl00.itc.global.mahle:3128
+  HTTPS_PROXY: http://dest-prxl00.itc.global.mahle:3128
+  NO_PROXY: ".mahle,docker,.docker,.dind,dind"
+  DOCKER_HOST: tcp://dind:2375
+
+build:
+  stage: build
+  script:
+    - echo ${DOCKER_USER} "${DOCKER_PASSWORD}"
+    - docker login -u ${DOCKER_USER} -p "${DOCKER_PASSWORD}"
+    - docker build -t ${CONTAINER_IMAGE} .
+    - docker tag ${CONTAINER_IMAGE} ${CONTAINER_IMAGE}
+    - docker tag ${CONTAINER_IMAGE} strumpfli/test:latest
+    - docker push ${CONTAINER_IMAGE}
+  tags:
+    - k8s-runner
+
+deploy_staging:
+  stage: deploy
+  image: kkurpanik/kubectl:latest
+  script:
+    - env
+    - kubectl config set-cluster k8s --server="${SERVER}"
+    - kubectl config set clusters.k8s.certificate-authority-data ${CERTIFICATE_AUTHORITY_DATA}
+    - kubectl config set-credentials gitlab --token="${USER_TOKEN}"
+    - kubectl config set-context default --cluster=k8s --user=gitlab
+    - kubectl config use-context default
+    - echo "$CI_ENVIRONMENT_URL"
+    - export CORRECTED_URL=$(echo ${CI_ENVIRONMENT_URL#http*://})
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" deployment.yaml
+    - sed -i "s#<URL>#${CORRECTED_URL}#g" deployment.yaml
+    - kubectl apply -f deployment.yaml -n $KUBE_NAMESPACE_STAGING
+  environment:
+    name: staging
+    url: http://nginx.test.mahle
+    kubernetes:
+      namespace: $KUBE_NAMESPACE_STAGING
+  tags:
+    - k8s-runner
+
+deploy_prod:
+  stage: deploy
+  image: kkurpanik/kubectl:latest
+  script:
+    - env
+    - kubectl config set-cluster k8s --server="${SERVER}"
+    - kubectl config set clusters.k8s.certificate-authority-data ${CERTIFICATE_AUTHORITY_DATA}
+    - kubectl config set-credentials gitlab --token="${USER_TOKEN}"
+    - kubectl config set-context default --cluster=k8s --user=gitlab
+    - kubectl config use-context default
+    - export CORRECTED_URL=$(echo ${CI_ENVIRONMENT_URL#http*://})
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" deployment.yaml
+    - sed -i "s#<URL>#${CORRECTED_URL}#g" deployment.yaml
+    - kubectl apply -f deployment.yaml -n $KUBE_NAMESPACE_PROD
+  environment:
+    url: http://nginx.prod.mahle
+    name: prod
+    kubernetes:
+      namespace: $KUBE_NAMESPACE_PROD
+  tags:
+    - k8s-runner
+  when: manual
