@@ -4,6 +4,7 @@
 
 import jinja2
 import sys
+import os
 from subprocess import check_output
 
 
@@ -24,6 +25,11 @@ f.close()
 for i in val:
   (k, v) = i.split("=")
   toRender[k] = v
+
+osEnv = dict(os.environ)
+for key in osEnv.keys():
+   toRender[key] = osEnv[key]
+
 
 parsed = template.render(toRender)
 
