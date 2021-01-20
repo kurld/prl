@@ -1,9 +1,9 @@
 #!/bin/bash
 
-CLUSTERNAME=dest-k8sml00
+CLUSTERNAME=<hostname>
 NAMESPACE=default
-USERNAME=testuser
-GROUPNAME=cognigy
+USERNAME=<username>
+GROUPNAME=<groupname>
 
 openssl genrsa -out ${USERNAME}.key 2048
 
